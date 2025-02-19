@@ -1,2 +1,2 @@
-This is GoLang CRUD Project for Education <br>
+This is GoLang CRUD JSON Project for Education 
 Status: Developing
