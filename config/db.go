@@ -13,11 +13,11 @@ var DB *sql.DB
 // InitDB initializes database connection
 func InitDB() {
 	// Database connection parameters
-	dbUsername := "root"
-	dbPassword := "mosuuuutech"
+	dbUsername := "root" // Change to your database username
+	dbPassword := "" // Change to your database password
 	dbHost := "localhost"
 	dbPort := "3306"
-	dbName := "api_go"
+	dbName := "" // Your database name
 
 	// Connection string for MySQL
 	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true", 
