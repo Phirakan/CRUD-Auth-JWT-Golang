@@ -14,7 +14,7 @@ var DB *sql.DB
 func InitDB() {
 	// Database connection parameters
 	dbUsername := "root"
-	dbPassword := ""
+	dbPassword := "mosuuuutech"
 	dbHost := "localhost"
 	dbPort := "3306"
 	dbName := "api_go"
