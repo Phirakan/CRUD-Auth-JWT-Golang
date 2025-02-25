@@ -1,85 +1,73 @@
-package config
+package utils
 
 import (
-	"database/sql"
-	"fmt"
-	"log"
+	"errors"
+	"time"
 
-	_ "github.com/go-sql-driver/mysql"
+	"github.com/dgrijalva/jwt-go"
 )
 
-var DB *sql.DB
+// JWT secret key
+var jwtSecret = []byte("your_secret_key_change_this")
 
-// InitDB initializes database connection
-func InitDB() {
-	// Database connection parameters
-	dbUsername := "root"
-	dbPassword := ""
-	dbHost := "localhost"
-	dbPort := "3306"
-	dbName := "crud_app"
-
-	// Connection string for MySQL
-	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true", 
-		dbUsername, dbPassword, dbHost, dbPort, dbName)
-
-	// Open a connection
-	var err error
-	DB, err = sql.Open("mysql", dsn)
-	if err != nil {
-		log.Fatal("Failed to connect to database:", err)
-	}
-
-	// Check the connection
-	err = DB.Ping()
-	if err != nil {
-		log.Fatal("Failed to ping database:", err)
-	}
-
-	log.Println("Database connection established")
-
-	// Create tables if they don't exist
-	createTables()
+// JWTClaim represents JWT claims
+type JWTClaim struct {
+	UserID int    `json:"user_id"`
+	Role   string `json:"role"`
+	jwt.StandardClaims
 }
 
-// createTables creates necessary database tables
-func createTables() {
-	// SQL for creating users table
-	userTableSQL := `
-	CREATE TABLE IF NOT EXISTS users (
-		id INT AUTO_INCREMENT PRIMARY KEY,
-		username VARCHAR(50) NOT NULL UNIQUE,
-		password VARCHAR(255) NOT NULL,
-		email VARCHAR(100) NOT NULL UNIQUE,
-		role ENUM('admin', 'user') NOT NULL DEFAULT 'user',
-		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-		updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-	);`
-
-	// SQL for creating products table
-	productTableSQL := `
-	CREATE TABLE IF NOT EXISTS products (
-		id INT AUTO_INCREMENT PRIMARY KEY,
-		name VARCHAR(100) NOT NULL,
-		description TEXT,
-		price DECIMAL(10,2) NOT NULL,
-		stock INT NOT NULL DEFAULT 0,
-		created_by INT,
-		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-		updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-		FOREIGN KEY (created_by) REFERENCES users(id)
-	);`
-
-	// Execute SQL to create tables
-	_, err := DB.Exec(userTableSQL)
-	if err != nil {
-		log.Fatal("Failed to create users table:", err)
+// GenerateJWT generates a JWT token
+func GenerateJWT(userID int, role string) (string, error) {
+	// Set expiration time for token
+	expirationTime := time.Now().Add(24 * time.Hour)
+	
+	// Create claims
+	claims := &JWTClaim{
+		UserID: userID,
+		Role:   role,
+		StandardClaims: jwt.StandardClaims{
+			ExpiresAt: expirationTime.Unix(),
+		},
 	}
-
-	_, err = DB.Exec(productTableSQL)
+	
+	// Create token with claims
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	
+	// Generate signed token
+	tokenString, err := token.SignedString(jwtSecret)
 	if err != nil {
-		log.Fatal("Failed to create products table:", err)
+		return "", err
 	}
+	
+	return tokenString, nil
+}
 
-	log.Println("Database tables created successfully")
+// ValidateToken validates JWT token and returns claims
+func ValidateToken(signedToken string) (*JWTClaim, error) {
+	// Parse token
+	token, err := jwt.ParseWithClaims(
+		signedToken,
+		&JWTClaim{},
+		func(token *jwt.Token) (interface{}, error) {
+			return jwtSecret, nil
+		},
+	)
+	
+	if err != nil {
+		return nil, err
+	}
+	
+	// Validate token
+	claims, ok := token.Claims.(*JWTClaim)
+	if !ok || !token.Valid {
+		return nil, errors.New("invalid token")
+	}
+	
+	// Verify expiration
+	if claims.ExpiresAt < time.Now().Unix() {
+		return nil, errors.New("token expired")
+	}
+	
+	return claims, nil
 }
