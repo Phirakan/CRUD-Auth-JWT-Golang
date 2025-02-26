@@ -30,14 +30,6 @@ func InitDB() {
 		log.Fatal("Failed to connect to database:", err)
 	}
 
-	// Check the connection
-	err = DB.Ping()
-	if err != nil {
-		log.Fatal("Failed to ping database:", err)
-	}
-
-	log.Println("Database connection established")
-
 	// Create tables if they don't exist
 	createTables()
 }
