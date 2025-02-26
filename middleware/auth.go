@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"strings"
 
-	"goapi/utils"
+	"goapi/utils" //change this to your module
 	
 	"github.com/gin-gonic/gin"
 )

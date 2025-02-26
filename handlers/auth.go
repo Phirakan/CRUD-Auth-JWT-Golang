@@ -4,9 +4,9 @@ import (
 	"database/sql"
 	"net/http"
 
-	"goapi/config"
-	"goapi/models"
-	"goapi/utils"
+	"goapi/config" //change this to your module
+	"goapi/models" //change this to your module
+	"goapi/utils" //change this to your module
 	
 	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
