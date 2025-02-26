@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"strconv"
 
-	"goapi/config"
-	"goapi/models"
+	"goapi/config"//change this to your module
+	"goapi/models"//change this to your module
 	
 	"github.com/gin-gonic/gin"
 )

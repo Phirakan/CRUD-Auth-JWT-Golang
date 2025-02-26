@@ -3,9 +3,9 @@ package main
 import (
 	"log"
 
-	"goapi/config"
-	"goapi/handlers"
-	"goapi/middleware"
+	"goapi/config" //change this to your module
+	"goapi/handlers" //change this to your module
+	"goapi/middleware" //change this to your module
 
 	"github.com/gin-gonic/gin"
 )

@@ -2,7 +2,7 @@ package handlers
 
 import (
 	"net/http"
-	"goapi/config"
+	"goapi/config" //change this to your module
 
 	"github.com/gin-gonic/gin"
 )
