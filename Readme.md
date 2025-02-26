@@ -74,10 +74,10 @@ To test the API endpoints, it is recommended to use [Postman](https://www.postma
    - Set the request type (GET, POST, PUT, DELETE).  
    - Enter the API URL (e.g., `http://localhost:8080/admin/products`).  
    - If authentication is required, add a Bearer Token in the **Authorization** tab.  
-   ![Postman acc](images/acc.png)
+   ![Postman acc](src/images/acc.png)
 
    - For `POST` and `PUT` requests, go to the **Body** tab and choose **raw** → **JSON** format.  
-   ![Postman Raw JSON Example](images/raw.png)
+   ![Postman Raw JSON Example](src/images/raw.png)
    **Example JSON Request:** 
     ```Json
      {
