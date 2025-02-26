@@ -81,7 +81,7 @@ To test the API endpoints, it is recommended to use [Postman](https://www.postma
    **Example JSON Request:** 
     ```Json
      {
-     "Name": "test",
+        "Name": "test",
         "Description": "test",
         "Price": 100.00,
         "Stock": 150
