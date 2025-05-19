@@ -22,6 +22,12 @@ func RegisterUser(c *gin.Context) {
 		return
 	}
 	
+	// ตรวจสอบว่า password และ confirm_password ตรงกันหรือไม่
+	if input.Password != input.ConfirmPassword {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "password and confirm password do not match"})
+		return
+	}
+	
 	// Hash password
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(input.Password), bcrypt.DefaultCost)
 	if err != nil {
@@ -109,6 +115,12 @@ func CreateAdmin(c *gin.Context) {
 	// Parse request body
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	
+	// ตรวจสอบว่า password และ confirm_password ตรงกันหรือไม่
+	if input.Password != input.ConfirmPassword {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "password and confirm password do not match"})
 		return
 	}
 	
