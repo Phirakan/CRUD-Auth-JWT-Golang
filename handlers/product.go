@@ -51,73 +51,145 @@ func CreateProduct(c *gin.Context) {
 
 // GetAllProducts retrieves all products
 func GetAllProducts(c *gin.Context) {
-	var products []models.Product
-	
-	// Query products from database
-	query := `SELECT id, name, description, price, stock, created_by, created_at, updated_at FROM products`
-	rows, err := config.DB.Query(query)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to fetch products"})
-		return
-	}
-	defer rows.Close()
-	
-	// Iterate through rows
-	for rows.Next() {
-		var product models.Product
-		err := rows.Scan(
-			&product.ID, 
-			&product.Name, 
-			&product.Description, 
-			&product.Price, 
-			&product.Stock, 
-			&product.CreatedBy, 
-			&product.CreatedAt, 
-			&product.UpdatedAt,
-		)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to process products"})
-			return
-		}
-		products = append(products, product)
-	}
-	
-	c.JSON(http.StatusOK, gin.H{"products": products})
+    var products []models.Product
+    
+    // Query products from database
+    query := `SELECT id, name, description, price, stock, created_by, created_at, updated_at FROM products`
+    rows, err := config.DB.Query(query)
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to fetch products"})
+        return
+    }
+    defer rows.Close()
+    
+    // Iterate through rows
+    for rows.Next() {
+        var product models.Product
+        err := rows.Scan(
+            &product.ID, 
+            &product.Name, 
+            &product.Description, 
+            &product.Price, 
+            &product.Stock, 
+            &product.CreatedBy, 
+            &product.CreatedAt, 
+            &product.UpdatedAt,
+        )
+        if err != nil {
+            c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to process products"})
+            return
+        }
+        
+        // Get sizes for this product
+        sizeRows, err := config.DB.Query(`
+            SELECT ps.id, ps.product_id, ps.size_id, s.name, ps.stock, ps.created_at, ps.updated_at 
+            FROM product_sizes ps
+            JOIN sizes s ON ps.size_id = s.id
+            WHERE ps.product_id = ?
+            ORDER BY s.display_order
+        `, product.ID)
+        
+        if err != nil {
+            c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to fetch product sizes"})
+            return
+        }
+        
+        var sizes []models.ProductSize
+        for sizeRows.Next() {
+            var size models.ProductSize
+            err := sizeRows.Scan(
+                &size.ID,
+                &size.ProductID,
+                &size.SizeID,
+                &size.SizeName,
+                &size.Stock,
+                &size.CreatedAt,
+                &size.UpdatedAt,
+            )
+            if err != nil {
+                c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to process product sizes"})
+                return
+            }
+            sizes = append(sizes, size)
+        }
+        sizeRows.Close()
+        
+        product.Sizes = sizes
+        products = append(products, product)
+    }
+    
+    c.JSON(http.StatusOK, gin.H{"products": products})
 }
 
 // GetProduct retrieves a specific product by ID
 func GetProduct(c *gin.Context) {
-	// Get product ID from URL
-	productID, err := strconv.Atoi(c.Param("id"))
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid product ID"})
-		return
-	}
-	
-	// Query product from database
-	var product models.Product
-	query := `SELECT id, name, description, price, stock, created_by, created_at, updated_at FROM products WHERE id = ?`
-	err = config.DB.QueryRow(query, productID).Scan(
-		&product.ID, 
-		&product.Name, 
-		&product.Description, 
-		&product.Price, 
-		&product.Stock, 
-		&product.CreatedBy, 
-		&product.CreatedAt, 
-		&product.UpdatedAt,
-	)
-	
-	if err != nil {
-		if err == sql.ErrNoRows {
-			c.JSON(http.StatusNotFound, gin.H{"error": "product not found"})
-			return
-		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "database error"})
-		return
-	}
-	
-	c.JSON(http.StatusOK, gin.H{"product": product})
+    // Get product ID from URL
+    productID, err := strconv.Atoi(c.Param("id"))
+    if err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "invalid product ID"})
+        return
+    }
+    
+    // Query product from database
+    var product models.Product
+    query := `SELECT id, name, description, price, stock, created_by, created_at, updated_at FROM products WHERE id = ?`
+    err = config.DB.QueryRow(query, productID).Scan(
+        &product.ID, 
+        &product.Name, 
+        &product.Description, 
+        &product.Price, 
+        &product.Stock, 
+        &product.CreatedBy, 
+        &product.CreatedAt, 
+        &product.UpdatedAt,
+    )
+    
+    if err != nil {
+        if err == sql.ErrNoRows {
+            c.JSON(http.StatusNotFound, gin.H{"error": "product not found"})
+            return
+        }
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "database error"})
+        return
+    }
+    
+    // Get sizes for this product
+    sizeRows, err := config.DB.Query(`
+        SELECT ps.id, ps.product_id, ps.size_id, s.name, ps.stock, ps.created_at, ps.updated_at 
+        FROM product_sizes ps
+        JOIN sizes s ON ps.size_id = s.id
+        WHERE ps.product_id = ?
+        ORDER BY s.display_order
+    `, product.ID)
+    
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to fetch product sizes"})
+        return
+    }
+    defer sizeRows.Close()
+    
+    var sizes []models.ProductSize
+    for sizeRows.Next() {
+        var size models.ProductSize
+        err := sizeRows.Scan(
+            &size.ID,
+            &size.ProductID,
+            &size.SizeID,
+            &size.SizeName,
+            &size.Stock,
+            &size.CreatedAt,
+            &size.UpdatedAt,
+        )
+        if err != nil {
+            c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to process product sizes"})
+            return
+        }
+        sizes = append(sizes, size)
+    }
+    
+    product.Sizes = sizes
+    
+    c.JSON(http.StatusOK, gin.H{"product": product})
 }
 
 // UpdateProduct updates a specific product
