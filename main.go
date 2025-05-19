@@ -76,6 +76,10 @@ func main() {
 		// Admin order management
     	admin.GET("/orders", handlers.GetAllOrders)
     	admin.PUT("/orders/:id/status", handlers.UpdateOrderStatus)
+		// Size management
+		admin.POST("/sizes", handlers.CreateSize)
+		admin.PUT("/sizes/:id", handlers.UpdateSize)
+		admin.DELETE("/sizes/:id", handlers.DeleteSize)
 	}
 	
 	// Webhook routes (called by external services)
