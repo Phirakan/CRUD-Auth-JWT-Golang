@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"net/http"
 	"strconv"
-	"time"
 
 	"goapi/config"//change this to your module
 	"goapi/models"//change this to your module
@@ -156,7 +155,7 @@ func GetProduct(c *gin.Context) {
     
     // Get sizes for this product
     sizeRows, err := config.DB.Query(`
-        SELECT ps.id, ps.product_id, ps.size_id, s.name as size_name, ps.stock, ps.created_at, ps.updated_at 
+        SELECT ps.id, ps.product_id, ps.size_id, s.name, ps.stock, ps.created_at, ps.updated_at 
         FROM product_sizes ps
         JOIN sizes s ON ps.size_id = s.id
         WHERE ps.product_id = ?
@@ -164,23 +163,14 @@ func GetProduct(c *gin.Context) {
     `, product.ID)
     
     if err != nil {
-        c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to fetch product sizes: " + err.Error()})
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to fetch product sizes"})
         return
     }
     defer sizeRows.Close()
     
-    var sizes []map[string]interface{}
+    var sizes []models.ProductSize
     for sizeRows.Next() {
-        var size struct {
-            ID        int       `json:"id"`
-            ProductID int       `json:"product_id"`
-            SizeID    int       `json:"size_id"`
-            SizeName  string    `json:"size_name"`
-            Stock     int       `json:"stock"`
-            CreatedAt time.Time `json:"created_at"`
-            UpdatedAt time.Time `json:"updated_at"`
-        }
-        
+        var size models.ProductSize
         err := sizeRows.Scan(
             &size.ID,
             &size.ProductID,
@@ -191,34 +181,15 @@ func GetProduct(c *gin.Context) {
             &size.UpdatedAt,
         )
         if err != nil {
-            c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to process product sizes: " + err.Error()})
+            c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to process product sizes"})
             return
         }
-        
-        // Add each size to the sizes array
-        sizes = append(sizes, map[string]interface{}{
-            "id":        size.ID,
-            "product_id": size.ProductID,
-            "size_id":   size.SizeID,
-            "size_name": size.SizeName,
-            "stock":     size.Stock,
-        })
+        sizes = append(sizes, size)
     }
     
-    // Create a map for the product with sizes
-    productMap := map[string]interface{}{
-        "id":          product.ID,
-        "name":        product.Name,
-        "description": product.Description,
-        "price":       product.Price,
-        "stock":       product.Stock,
-        "created_by":  product.CreatedBy,
-        "created_at":  product.CreatedAt,
-        "updated_at":  product.UpdatedAt,
-        "sizes":       sizes, // Add the sizes array to the product
-    }
+    product.Sizes = sizes
     
-    c.JSON(http.StatusOK, gin.H{"product": productMap})
+    c.JSON(http.StatusOK, gin.H{"product": product})
 }
 
 // UpdateProduct updates a specific product
