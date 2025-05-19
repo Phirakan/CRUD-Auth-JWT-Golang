@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	
 
 	"goapi/config" //change this to your module
 	"goapi/handlers" //change this to your module
@@ -21,6 +22,8 @@ func main() {
 	r.Use(middleware.CORSMiddleware())
 	
 	r.GET("/health-check", handlers.CheckConnection)
+
+
 	
 	// Public routes (no authentication required)
 	r.POST("/register", handlers.RegisterUser)
@@ -76,6 +79,12 @@ func main() {
 		// Admin order management
     	admin.GET("/orders", handlers.GetAllOrders)
     	admin.PUT("/orders/:id/status", handlers.UpdateOrderStatus)
+		// Size management
+		admin.POST("/sizes", handlers.CreateSize)
+		admin.PUT("/sizes/:id", handlers.UpdateSize)
+		admin.DELETE("/sizes/:id", handlers.DeleteSize)
+
+
 	}
 	
 	// Webhook routes (called by external services)
