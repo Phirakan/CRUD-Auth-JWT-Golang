@@ -28,6 +28,10 @@ func main() {
 	r.GET("/products", handlers.GetAllProducts)
 	r.GET("/products/:id", handlers.GetProduct)
 
+	// Sizes routes
+	r.GET("/sizes", handlers.GetAllSizes)
+	r.GET("/products/:id/sizes", handlers.GetProductSizes)
+
 	// Protected routes (authentication required)
 	auth := r.Group("/")
 	auth.Use(middleware.AuthMiddleware())
@@ -52,6 +56,9 @@ func main() {
    		auth.POST("/shipping-addresses", handlers.CreateShippingAddress)
     	auth.PUT("/shipping-addresses/:id", handlers.UpdateShippingAddress)
     	auth.DELETE("/shipping-addresses/:id", handlers.DeleteShippingAddress)
+
+		// Protected routes for managing sizes
+		auth.PUT("/products/:id/sizes", handlers.UpdateProductSizes)
 	}
 
 	// Admin-only routes
