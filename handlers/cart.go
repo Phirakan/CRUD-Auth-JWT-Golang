@@ -47,11 +47,13 @@ func GetCart(c *gin.Context) {
 	
 	// Get cart items
 	rows, err := config.DB.Query(`
-		SELECT ci.id, ci.product_id, ci.quantity, 
-		       p.name, p.description, p.price, p.stock 
-		FROM cart_items ci 
-		JOIN products p ON ci.product_id = p.id 
-		WHERE ci.cart_id = ?`, cartID)
+    SELECT ci.id, ci.product_id, ci.quantity, ci.size_id,
+           p.name, p.description, p.price, p.stock,
+           s.name as size_name
+    FROM cart_items ci 
+    JOIN products p ON ci.product_id = p.id 
+    LEFT JOIN sizes s ON ci.size_id = s.id
+    WHERE ci.cart_id = ?`, cartID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to fetch cart items"})
 		return
@@ -65,16 +67,26 @@ func GetCart(c *gin.Context) {
 	for rows.Next() {
 		var item models.CartItem
 		var product models.Product
+		var sizeID sql.NullInt64
+		var sizeName sql.NullString
 		
 		err := rows.Scan(
-			&item.ID, 
-			&item.ProductID, 
-			&item.Quantity,
-			&product.Name,
-			&product.Description,
-			&product.Price,
-			&product.Stock,
-		)
+    	&item.ID, 
+    	&item.ProductID, 
+    	&item.Quantity,
+    	&sizeID,
+    	&product.Name,
+    	&product.Description,
+    	&product.Price,
+   	 	&product.Stock,
+    	&sizeName,
+	)
+	if sizeID.Valid {
+    item.SizeID = int(sizeID.Int64)
+	}
+	if sizeName.Valid {
+   	 item.SizeName = sizeName.String
+	}
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to process cart items"})
 			return
